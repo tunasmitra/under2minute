@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Under 2 Minutes — Customer Login</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+        <style>
+            body {
+                min-height: 100vh;
+            }
+            .bg-brand {
+                background: radial-gradient(1200px 600px at 10% 10%, #dbeafe 0%, transparent 40%),
+                    radial-gradient(1200px 600px at 90% 90%, #e0e7ff 0%, transparent 40%);
+            }
+        </style>
+    </head>
+    <body class="bg-light bg-brand d-flex align-items-center">
+        <main class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-sm-10 col-md-6 col-lg-5">
+                    <div class="card shadow border-0">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-lightning-charge-fill text-primary" style="font-size: 2.25rem"></i>
+                                <h1 class="h4 fw-bold mt-2 mb-0">Under 2 Minutes</h1>
+                                <div class="text-secondary small">Customer Portal</div>
+                            </div>
+
+                            <form id="loginForm" class="needs-validation" novalidate>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                        <input
+                                            type="email"
+                                            class="form-control"
+                                            id="email"
+                                            placeholder="you@company.com"
+                                            required
+                                        />
+                                        <div class="invalid-feedback">Masukkan email yang valid.</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <div class="input-group" id="passwordGroup">
+                                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                        <input
+                                            type="password"
+                                            class="form-control"
+                                            id="password"
+                                            minlength="6"
+                                            placeholder="••••••••"
+                                            required
+                                        />
+                                        <button
+                                            class="btn btn-outline-secondary"
+                                            type="button"
+                                            id="togglePassword"
+                                            aria-label="Tampilkan password"
+                                        >
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <div class="invalid-feedback">Minimal 6 karakter.</div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" value="1" id="remember" />
+                                        <label class="form-check-label" for="remember">Ingat saya</label>
+                                    </div>
+                                    <a
+                                        class="small text-decoration-none"
+                                        href="#"
+                                        onclick="event.preventDefault(); alert('Demo: fitur reset password belum diaktifkan.');"
+                                        >Lupa password?</a
+                                    >
+                                </div>
+
+                                <button class="btn btn-primary w-100" type="submit" id="btnLogin">
+                                    <span
+                                        class="spinner-border spinner-border-sm me-2 d-none"
+                                        id="spinner"
+                                        role="status"
+                                        aria-hidden="true"
+                                    ></span>
+                                    Login
+                                </button>
+
+                                <div class="form-text mt-3">
+                                    Demo login apa saja akan diterima. Data hanya tersimpan di browser (localStorage).
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Show/Hide password
+            document.getElementById("togglePassword").addEventListener("click", function () {
+                const pwd = document.getElementById("password");
+                const isText = pwd.type === "text";
+                pwd.type = isText ? "password" : "text";
+                this.innerHTML = isText ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+            });
+
+            // Bootstrap validation + fake auth
+            const form = document.getElementById("loginForm");
+            form.addEventListener("submit", function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (!form.checkValidity()) {
+                    form.classList.add("was-validated");
+                    return;
+                }
+
+                const btn = document.getElementById("btnLogin");
+                const spinner = document.getElementById("spinner");
+                spinner.classList.remove("d-none");
+                btn.setAttribute("disabled", "disabled");
+
+                // Simulate request
+                setTimeout(() => {
+                    const email = document.getElementById("email").value.trim();
+                    const name = email.split("@")[0] || "Customer";
+                    const payload = { token: "demo-token", name, email, role: "Purchaser" };
+                    localStorage.setItem("u2m_auth", JSON.stringify(payload));
+                    // Optional remember flag
+                    if (document.getElementById("remember").checked) localStorage.setItem("u2m_remember", "1");
+                    // Redirect to dashboard
+                    window.location.href = "dashboard.html";
+                }, 700);
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Invoices</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    </head>
+    <body class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Daftar Invoice</h3>
+            <a href="dashboard.html" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        </div>
+
+        <div id="invoiceList"></div>
+
+        <script>
+            const orders = JSON.parse(localStorage.getItem("u2m_orders")) || [];
+            let invoices = JSON.parse(localStorage.getItem("u2m_invoices")) || [];
+
+            // Generate invoice otomatis untuk setiap order "Selesai" yg belum ada invoice
+            orders
+                .filter((o) => o.status === "Selesai")
+                .forEach((o) => {
+                    if (!invoices.find((inv) => inv.orderNumber === o.orderNumber)) {
+                        invoices.push({
+                            invoiceNumber: "INV-" + (invoices.length + 1).toString().padStart(4, "0"),
+                            orderNumber: o.orderNumber,
+                            poNumber: o.poNumber,
+                            quotationNumber: o.quotationNumber,
+                            amount: o.total || 0,
+                            date: new Date().toLocaleDateString(),
+                            status: "Belum Dibayar",
+                        });
+                    }
+                });
+
+            localStorage.setItem("u2m_invoices", JSON.stringify(invoices));
+
+            const list = document.getElementById("invoiceList");
+
+            function renderInvoices() {
+                list.innerHTML = "";
+
+                if (invoices.length === 0) {
+                    list.innerHTML = `<div class="alert alert-info">Belum ada invoice yang tersedia.</div>`;
+                    return;
+                }
+
+                invoices.forEach((inv, idx) => {
+                    list.innerHTML += `
+          <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Invoice: ${inv.invoiceNumber}</h5>
+              <p><strong>Order:</strong> ${inv.orderNumber} | <strong>PO:</strong> ${inv.poNumber}</p>
+              <p><strong>Quotation:</strong> ${inv.quotationNumber}</p>
+              <p><strong>Total:</strong> ${formatCurrency(inv.amount)}</p>
+              <p><strong>Tanggal:</strong> ${inv.date}</p>
+              <p><strong>Status:</strong> 
+                <span class="badge ${inv.status === "Lunas" ? "bg-success" : "bg-warning text-dark"}">${
+                        inv.status
+                    }</span>
+              </p>
+              ${
+                  inv.status === "Belum Dibayar"
+                      ? `<button class="btn btn-primary" onclick="payInvoice(${idx})"><i class="bi bi-credit-card"></i> Bayar Sekarang</button>`
+                      : ""
+              }
+            </div>
+          </div>
+        `;
+                });
+            }
+
+            function payInvoice(index) {
+                invoices[index].status = "Lunas";
+                localStorage.setItem("u2m_invoices", JSON.stringify(invoices));
+                alert("Pembayaran berhasil, invoice sudah lunas!");
+                renderInvoices();
+            }
+
+            function formatCurrency(value) {
+                return new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                }).format(value);
+            }
+
+            renderInvoices();
+        </script>
+    </body>
+</html>

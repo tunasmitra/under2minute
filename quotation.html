@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Under 2 Minutes — Quotation</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    </head>
+    <body class="bg-light">
+        <script>
+            // Route guard: must be logged in
+            const auth = JSON.parse(localStorage.getItem("u2m_auth") || "null");
+            if (!auth) window.location.href = "login.html";
+        </script>
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="dashboard.html"
+                    ><i class="bi bi-lightning-charge-fill me-1"></i>Under 2 Minutes</a
+                >
+                <div class="ms-auto d-flex gap-2">
+                    <a href="dashboard.html" class="btn btn-light btn-sm"><i class="bi bi-house-door"></i> Dashboard</a>
+                    <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container py-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <h1 class="h4 mb-0"><i class="bi bi-file-earmark-text me-2"></i>Quotation</h1>
+                    <div class="text-secondary">
+                        Buat penawaran multi-item. Subtotal, PPN 11%, dan Grand Total dihitung otomatis.
+                    </div>
+                </div>
+                <div class="text-secondary small">
+                    Masuk sebagai: <strong id="userName">Customer</strong> (<span id="userEmail"></span>)
+                </div>
+            </div>
+
+            <!-- Form Tambah Item -->
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-white"><strong>Tambah Item Produk</strong></div>
+                <div class="card-body">
+                    <form id="itemForm" class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Produk</label>
+                            <select id="product" class="form-select" required>
+                                <option value="">-- Pilih Produk --</option>
+                                <option value="Lakban 100 meter" data-price="5000">Lakban 100 meter - 5.000</option>
+                                <option value="Lakban 500 meter" data-price="10000">Lakban 500 meter - 10.000</option>
+                                <option value="Lakban 1000 meter" data-price="15000">Lakban 1000 meter - 15.000</option>
+                                <option value="Mesin A" data-price="1000000">Mesin A — Rp 1.000.000</option>
+                                <option value="Mesin B" data-price="1500000">Mesin B — Rp 1.500.000</option>
+                                <option value="Mesin C" data-price="2000000">Mesin C — Rp 2.000.000</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Qty</label>
+                            <input type="number" id="qty" class="form-control" min="1" value="1" required />
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-cart-plus"></i> Tambah Item
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabel Item & Summary -->
+            <div class="card mb-4 shadow-sm border-0">
+                <div class="card-header bg-white"><strong>Item dalam Quotation</strong></div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="min-width: 220px">Produk</th>
+                                    <th class="text-end" style="width: 120px">Qty</th>
+                                    <th class="text-end" style="width: 160px">Harga</th>
+                                    <th class="text-end" style="width: 180px">Total</th>
+                                    <th class="text-center" style="width: 80px">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemTable"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="row g-3 justify-content-end">
+                        <div class="col-md-6 col-lg-4">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Subtotal</span><strong id="subtotal">Rp 0</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>PPN 11%</span><strong id="ppn">Rp 0</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Grand Total</span><strong id="grandtotal">Rp 0</strong>
+                                </li>
+                            </ul>
+                            <div class="text-end mt-3">
+                                <button class="btn btn-success" id="saveBtn" onclick="saveQuotation()" disabled>
+                                    <i class="bi bi-save"></i> Simpan Quotation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daftar Quotation -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <strong>Daftar Quotation</strong>
+                    <small class="text-secondary">Klik printer untuk unduh PDF</small>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 160px">No. Quotation</th>
+                                    <th>Tanggal</th>
+                                    <th>Jumlah Item</th>
+                                    <th class="text-end">Grand Total</th>
+                                    <th>Status</th>
+                                    <th class="text-end" style="width: 160px">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotationTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- libs -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+        <script>
+            // ===== Utils =====
+            function formatCurrency(n) {
+                return new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0,
+                }).format(n || 0);
+            }
+            function todayStr() {
+                return new Date().toISOString().slice(0, 10);
+            }
+
+            document.getElementById("userName").textContent = auth?.name || "Customer";
+            document.getElementById("userEmail").textContent = auth?.email || "";
+
+            // ===== State =====
+            let currentItems = [];
+            let quotations = JSON.parse(localStorage.getItem("u2m_quotations") || "[]");
+
+            const itemForm = document.getElementById("itemForm");
+            const itemTable = document.getElementById("itemTable");
+            const subtotalEl = document.getElementById("subtotal");
+            const ppnEl = document.getElementById("ppn");
+            const grandEl = document.getElementById("grandtotal");
+            const saveBtn = document.getElementById("saveBtn");
+            const quotationTable = document.getElementById("quotationTable");
+
+            // ===== Add item =====
+            itemForm.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const pSel = document.getElementById("product");
+                const qtyInput = document.getElementById("qty");
+                const name = pSel.value;
+                const price = parseInt(pSel.selectedOptions[0]?.dataset.price || 0, 10);
+                const qty = parseInt(qtyInput.value || "0", 10);
+                if (!name || qty < 1) return;
+                const total = price * qty;
+                currentItems.push({ product: name, price, qty, total });
+                renderItems();
+                itemForm.reset();
+                qtyInput.value = 1;
+            });
+
+            function renderItems() {
+                itemTable.innerHTML = "";
+                let subtotal = 0;
+                currentItems.forEach((it, idx) => {
+                    subtotal += it.total;
+                    itemTable.insertAdjacentHTML(
+                        "beforeend",
+                        `
+          <tr>
+            <td>${it.product}</td>
+            <td class="text-end">${it.qty}</td>
+            <td class="text-end">${formatCurrency(it.price)}</td>
+            <td class="text-end">${formatCurrency(it.total)}</td>
+            <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="removeItem(${idx})"><i class="bi bi-trash"></i></button></td>
+          </tr>`
+                    );
+                });
+                const ppn = subtotal * 0.11;
+                const grand = subtotal + ppn;
+                subtotalEl.textContent = formatCurrency(subtotal);
+                ppnEl.textContent = formatCurrency(ppn);
+                grandEl.textContent = formatCurrency(grand);
+                saveBtn.disabled = currentItems.length === 0;
+            }
+
+            function removeItem(i) {
+                currentItems.splice(i, 1);
+                renderItems();
+            }
+
+            // ===== Save quotation =====
+            function nextQuoteNumber() {
+                // Simple incremental based on existing count
+                const n = quotations.length + 1;
+                return `Q-${new Date().getFullYear()}-${String(n).padStart(4, "0")}`;
+            }
+
+            function saveQuotation() {
+                const subtotal = currentItems.reduce((s, it) => s + it.total, 0);
+                const ppn = subtotal * 0.11;
+                const grandtotal = subtotal + ppn;
+                const q = {
+                    id: nextQuoteNumber(),
+                    date: todayStr(),
+                    items: [...currentItems],
+                    subtotal,
+                    ppn,
+                    grandtotal,
+                    status: "DRAFT",
+                    customer: { name: auth?.name || "Customer", email: auth?.email || "" },
+                };
+                quotations.push(q);
+                localStorage.setItem("u2m_quotations", JSON.stringify(quotations));
+                currentItems = [];
+                renderItems();
+                renderQuotations();
+            }
+
+            // ===== Render quotations list =====
+            function badge(status) {
+                const map = { DRAFT: "secondary", APPROVED: "success", REJECTED: "danger" };
+                return `<span class="badge text-bg-${map[status] || "secondary"}">${status}</span>`;
+            }
+
+            function renderQuotations() {
+                quotationTable.innerHTML = "";
+                quotations.forEach((q, index) => {
+                    quotationTable.insertAdjacentHTML(
+                        "beforeend",
+                        `
+          <tr>
+            <td class="fw-medium">${q.id}</td>
+            <td>${q.date}</td>
+            <td>${q.items.length} item</td>
+            <td class="text-end">${formatCurrency(q.grandtotal)}</td>
+            <td>${badge(q.status)}</td>
+            <td class="text-end">
+              <div class="btn-group">
+                <button class="btn btn-sm btn-success" title="Setujui" onclick="approveQuotation(${index})"><i class="bi bi-check-circle"></i></button>
+                <button class="btn btn-sm btn-outline-danger" title="Tolak" onclick="rejectQuotation(${index})"><i class="bi bi-x-circle"></i></button>
+                <button class="btn btn-sm btn-primary" title="Print PDF" onclick="printQuotation(${index})"><i class="bi bi-printer"></i></button>
+              </div>
+            </td>
+          </tr>`
+                    );
+                });
+            }
+
+            function approveQuotation(index) {
+                quotations[index].status = "APPROVED";
+                localStorage.setItem("quotations", JSON.stringify(quotations));
+                renderQuotations();
+            }
+            function rejectQuotation(i) {
+                quotations[i].status = "REJECTED";
+                persist();
+                renderQuotations();
+            }
+            function persist() {
+                localStorage.setItem("u2m_quotations", JSON.stringify(quotations));
+            }
+
+            function syncPOs() {
+                const approved = quotations.filter((q) => q.status === "APPROVED");
+                let pos = JSON.parse(localStorage.getItem("u2m_pos") || "[]");
+
+                approved.forEach((q) => {
+                    if (!pos.find((p) => p.id === q.id)) {
+                        pos.push({
+                            id: q.id,
+                            quotationNumber: q.id,
+                            poNumber: `PO-${q.id}`,
+                            poDate: todayStr(),
+                            fileName: "", // default kosong
+                            date: todayStr(),
+                            status: "APPROVED",
+                        });
+                    }
+                });
+
+                localStorage.setItem("u2m_pos", JSON.stringify(pos));
+            }
+
+            // ===== Print to PDF (jsPDF + autoTable) =====
+            function printQuotation(index) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const q = quotations[index];
+
+                // Header
+                doc.setFontSize(16);
+                doc.text("QUOTATION", 105, 14, { align: "center" });
+                doc.setFontSize(11);
+                doc.text("Under 2 Minutes — Customer Portal", 105, 20, { align: "center" });
+
+                // Meta
+                doc.setFontSize(10);
+                doc.text(`No: ${q.id}`, 14, 32);
+                doc.text(`Tanggal: ${q.date}`, 14, 38);
+                doc.text(`Customer: ${q.customer?.name || ""}`, 120, 32);
+                doc.text(`Email: ${q.customer?.email || ""}`, 120, 38);
+
+                // Table
+                const body = q.items.map((it, i) => [
+                    i + 1,
+                    it.product,
+                    it.qty,
+                    formatCurrency(it.price),
+                    formatCurrency(it.total),
+                ]);
+                doc.autoTable({
+                    startY: 46,
+                    head: [["No", "Nama Barang", "Qty", "Harga", "Subtotal"]],
+                    body,
+                });
+
+                // Totals
+                const y = doc.lastAutoTable.finalY + 8;
+                doc.text(`Subtotal: ${formatCurrency(q.subtotal)}`, 130, y);
+                doc.text(`PPN (11%): ${formatCurrency(q.ppn)}`, 130, y + 6);
+                doc.setFontSize(12);
+                doc.text(`Grand Total: ${formatCurrency(q.grandtotal)}`, 130, y + 12);
+
+                // Footer note
+                doc.setFontSize(9);
+                doc.text("Masa berlaku penawaran 14 hari kalender sejak tanggal terbit.", 14, y + 20);
+
+                doc.save(`${q.id}.pdf`);
+            }
+
+            function logout() {
+                localStorage.removeItem("u2m_auth");
+                window.location.href = "login.html";
+            }
+
+            // Init
+            renderItems();
+            renderQuotations();
+        </script>
+    </body>
+</html>

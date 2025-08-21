@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Konfirmasi Penerimaan Barang</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    </head>
+    <body class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Konfirmasi Penerimaan Barang</h3>
+            <a href="dashboard.html" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        </div>
+
+        <div id="receiveList"></div>
+
+        <script>
+            const orders = JSON.parse(localStorage.getItem("u2m_orders")) || [];
+            const list = document.getElementById("receiveList");
+
+            function renderReceive() {
+                list.innerHTML = "";
+
+                // Filter hanya order dengan status "Dikirim"
+                const filtered = orders.filter((o) => o.status === "Dikirim");
+
+                if (filtered.length === 0) {
+                    list.innerHTML = `<div class="alert alert-info">Belum ada pesanan yang dikirim untuk dikonfirmasi.</div>`;
+                    return;
+                }
+
+                filtered.forEach((o, idx) => {
+                    list.innerHTML += `
+          <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Order: ${o.orderNumber}</h5>
+              <p class="mb-1"><strong>No PO:</strong> ${o.poNumber}</p>
+              <p class="mb-1"><strong>Quotation:</strong> ${o.quotationNumber}</p>
+              <p class="mb-1"><strong>Tanggal Order:</strong> ${o.date}</p>
+              <p class="mb-3"><strong>Status:</strong> <span class="badge bg-info">${o.status}</span></p>
+              <button class="btn btn-success" onclick="confirmReceive(${idx})">
+                <i class="bi bi-check-circle"></i> Konfirmasi Terima
+              </button>
+            </div>
+          </div>
+        `;
+                });
+            }
+
+            function confirmReceive(index) {
+                // Cari index asli di orders
+                const order = orders.filter((o) => o.status === "Dikirim")[index];
+                const realIndex = orders.findIndex((o) => o.orderNumber === order.orderNumber);
+
+                if (realIndex !== -1) {
+                    orders[realIndex].status = "Selesai";
+                    localStorage.setItem("u2m_orders", JSON.stringify(orders));
+                    alert("Pesanan berhasil dikonfirmasi sudah diterima!");
+                    renderReceive();
+                }
+            }
+
+            renderReceive();
+        </script>
+    </body>
+</html>

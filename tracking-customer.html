@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Tracking Pesanan</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+        <style>
+            .progress-step {
+                font-size: 0.85rem;
+                margin-top: 0.25rem;
+            }
+        </style>
+    </head>
+    <body class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3>Tracking Pesanan Saya</h3>
+            <a href="dashboard.html" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
+            </a>
+        </div>
+
+        <div id="trackingCustomerList"></div>
+
+        <script>
+            // Ambil semua orders dari localStorage
+            const orders = JSON.parse(localStorage.getItem("u2m_orders")) || [];
+            const list = document.getElementById("trackingCustomerList");
+
+            function renderTrackingCustomer() {
+                list.innerHTML = "";
+                if (orders.length === 0) {
+                    list.innerHTML = `<div class="alert alert-info">Belum ada pesanan</div>`;
+                    return;
+                }
+
+                orders.forEach((o) => {
+                    const percent = getProgressPercent(o.status);
+                    const steps = ["Dalam Proses", "Produksi", "Dikirim", "Selesai"];
+
+                    list.innerHTML += `
+          <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Order: ${o.orderNumber}</h5>
+              <p class="mb-1"><strong>No PO:</strong> ${o.poNumber}</p>
+              <p class="mb-1"><strong>Quotation:</strong> ${o.quotationNumber}</p>
+              <p class="mb-1"><strong>Tanggal Order:</strong> ${o.date}</p>
+              <p class="mb-3"><strong>Deadline:</strong> ${o.deadline}</p>
+
+              <div class="progress" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped bg-${statusColor(o.status)}" 
+                     role="progressbar" style="width: ${percent}%">
+                  ${o.status}
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between progress-step">
+                ${steps
+                    .map(
+                        (step) => `
+                  <span class="${step === o.status ? "fw-bold text-dark" : "text-muted"}">${step}</span>
+                `
+                    )
+                    .join("")}
+              </div>
+            </div>
+          </div>
+        `;
+                });
+            }
+
+            function getProgressPercent(status) {
+                switch (status) {
+                    case "Dalam Proses":
+                        return 25;
+                    case "Produksi":
+                        return 50;
+                    case "Dikirim":
+                        return 75;
+                    case "Selesai":
+                        return 100;
+                    default:
+                        return 0;
+                }
+            }
+
+            function statusColor(status) {
+                switch (status) {
+                    case "Dalam Proses":
+                        return "primary";
+                    case "Produksi":
+                        return "warning";
+                    case "Dikirim":
+                        return "info";
+                    case "Selesai":
+                        return "success";
+                    default:
+                        return "secondary";
+                }
+            }
+
+            renderTrackingCustomer();
+        </script>
+    </body>
+</html>

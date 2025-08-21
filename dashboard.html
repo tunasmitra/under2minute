@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Under 2 Minutes — Dashboard</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+        <style>
+            .stat-card i {
+                opacity: 0.9;
+            }
+            .stat-card .card-body {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            .stat-value {
+                font-size: 1.5rem;
+                font-weight: 700;
+            }
+            .click-card {
+                cursor: pointer;
+                transition: transform 0.08s ease-in-out;
+            }
+            .click-card:hover {
+                transform: translateY(-2px);
+            }
+            .table thead th {
+                white-space: nowrap;
+            }
+        </style>
+    </head>
+    <body class="bg-light">
+        <script>
+            // Guard: redirect to login if not authenticated
+            const auth = JSON.parse(localStorage.getItem("u2m_auth") || "null");
+            if (!auth) window.location.href = "login.html";
+        </script>
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    <span>Under 2 Minutes</span>
+                </a>
+
+                <button
+                    class="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#navbarContent"
+                    aria-controls="navbarContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <form class="ms-auto d-flex" role="search">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input
+                                class="form-control"
+                                type="search"
+                                placeholder="Cari SKU / PO / Quotation / Invoice"
+                                aria-label="Search"
+                            />
+                        </div>
+                    </form>
+                    <ul class="navbar-nav ms-3 mb-2 mb-lg-0 align-items-lg-center">
+                        <li class="nav-item me-lg-2">
+                            <a class="nav-link" href="#" onclick="refreshDemo()" title="Refresh data demo"
+                                ><i class="bi bi-arrow-clockwise"></i
+                            ></a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a
+                                class="nav-link dropdown-toggle d-flex align-items-center"
+                                href="#"
+                                id="userMenu"
+                                role="button"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                            >
+                                <i class="bi bi-person-circle me-2"></i>
+                                <span id="userName">Customer</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                                <li><h6 class="dropdown-header" id="userEmail">you@company.com</h6></li>
+                                <li>
+                                    <a class="dropdown-item" href="quotation.html"
+                                        ><i class="bi bi-file-earmark-text me-2"></i>Quotations</a
+                                    >
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="po.html"
+                                        ><i class="bi bi-upload me-2"></i>Upload PO</a
+                                    >
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" onclick="logout()"
+                                        ><i class="bi bi-box-arrow-right me-2"></i>Logout</a
+                                    >
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container py-4">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                <div>
+                    <h1 class="h4 mb-0">Dashboard</h1>
+                    <div class="text-secondary" id="welcomeLine">Selamat datang 👋</div>
+                </div>
+                <div class="btn-group">
+                    <a class="btn btn-sm btn-outline-primary" href="quotation.html"
+                        ><i class="bi bi-plus-circle me-1"></i> Buat Quotation</a
+                    >
+                    <a class="btn btn-sm btn-outline-success" href="po.html"
+                        ><i class="bi bi-upload me-1"></i> Upload PO</a
+                    >
+                    <a class="btn btn-sm btn-outline-warning" href="#" onclick="goto('tracking.html')"
+                        ><i class="bi bi-truck me-1"></i> Tracking</a
+                    >
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6 col-lg-4 col-xxl-2">
+                    <a href="quotation.html">
+                        <div class="card stat-card shadow-sm border-0 click-card">
+                            <div class="card-body">
+                                <i class="bi bi-file-earmark-text fs-2 text-primary"></i>
+                                <div>
+                                    <div class="text-secondary small">Quotations Aktif</div>
+                                    <div class="stat-value" id="statQuotes">—</div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-4 col-xxl-2">
+                    <div class="card stat-card shadow-sm border-0">
+                        <div class="card-body">
+                            <i class="bi bi-clipboard-check fs-2 text-success"></i>
+                            <div>
+                                <div class="text-secondary small">PO Menunggu</div>
+                                <div class="stat-value" id="statPO">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-4 col-xxl-2">
+                    <div class="card stat-card shadow-sm border-0">
+                        <div class="card-body">
+                            <i class="bi bi-gear-wide-connected fs-2 text-info"></i>
+                            <div>
+                                <div class="text-secondary small">Diproses</div>
+                                <div class="stat-value" id="statProcess">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-4 col-xxl-2">
+                    <div class="card stat-card shadow-sm border-0" onclick="goto('tracking.html')">
+                        <div class="card-body">
+                            <i class="bi bi-truck fs-2 text-warning"></i>
+                            <div>
+                                <div class="text-secondary small">Dalam Pengiriman</div>
+                                <div class="stat-value" id="statShipping">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-4 col-xxl-2">
+                    <div class="card stat-card shadow-sm border-0" onclick="goto('invoices.html')">
+                        <div class="card-body">
+                            <i class="bi bi-receipt fs-2 text-danger"></i>
+                            <div>
+                                <div class="text-secondary small">Tagihan</div>
+                                <div class="stat-value" id="statInvoices">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-4 col-xxl-2">
+                    <div class="card stat-card shadow-sm border-0">
+                        <div class="card-body">
+                            <i class="bi bi-check2-circle fs-2 text-secondary"></i>
+                            <div>
+                                <div class="text-secondary small">Selesai</div>
+                                <div class="stat-value" id="statDone">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Recent Quotations -->
+                <div class="col-12 col-xl-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="h6 mb-0">
+                                    <i class="bi bi-file-earmark-text me-2 text-primary"></i>Quotation Terbaru
+                                </h2>
+                                <a class="text-decoration-none" href="quotation.html">Lihat semua</a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Tanggal</th>
+                                            <th>Customer Site</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblQuotes"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoices -->
+                <div class="col-12 col-xl-6">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h2 class="h6 mb-0">
+                                    <i class="bi bi-receipt me-2 text-danger"></i>Tagihan (Due Soon)
+                                </h2>
+                                <a class="text-decoration-none" href="#" onclick="goto('invoices.html')">Lihat semua</a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Tanggal</th>
+                                            <th>Jatuh Tempo</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblInvoices"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline sample could be added later -->
+            </div>
+        </main>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Populate user info
+            document.getElementById("userName").textContent = auth?.name || "Customer";
+            document.getElementById("userEmail").textContent = auth?.email || "";
+            document.getElementById("welcomeLine").textContent = `Selamat datang, ${auth?.name || "Customer"} 👋`;
+
+            function logout() {
+                localStorage.removeItem("u2m_auth");
+                window.location.href = "login.html";
+            }
+
+            function goto(page) {
+                // Demo: prevent 404 for pages belum dibuat
+                if (
+                    ![
+                        "quotation.html",
+                        "po.html",
+                        "tracking.html",
+                        "invoices.html",
+                        "receive.html",
+                        "orders.html",
+                    ].includes(page)
+                )
+                    return;
+                alert("Demo: Halaman " + page + " belum dibuat.");
+            }
+
+            // Demo data generator
+            function currency(n) {
+                return new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0,
+                }).format(n);
+            }
+            function badge(status) {
+                const map = {
+                    SENT: "primary",
+                    ACCEPTED: "success",
+                    EXPIRED: "secondary",
+                    DRAFT: "warning",
+                    UNPAID: "danger",
+                    PARTIAL: "warning",
+                    PAID: "success",
+                };
+                const color = map[status] || "secondary";
+                return `<span class="badge text-bg-${color}">${status}</span>`;
+            }
+
+            function seedDemo() {
+                const today = new Date();
+                const addDays = (d) => {
+                    const x = new Date(today);
+                    x.setDate(x.getDate() + d);
+                    return x;
+                };
+                const fmt = (d) => d.toISOString().slice(0, 10);
+                return {
+                    kpis: { quotes: 4, po: 2, process: 3, ship: 1, invoices: 2, done: 8 },
+                    quotes: [
+                        {
+                            id: "Q-2025-0081",
+                            date: fmt(addDays(-2)),
+                            site: "Jakarta Barat",
+                            total: 125000000,
+                            status: "SENT",
+                        },
+                        {
+                            id: "Q-2025-0079",
+                            date: fmt(addDays(-4)),
+                            site: "Bandung Timur",
+                            total: 89000000,
+                            status: "ACCEPTED",
+                        },
+                        {
+                            id: "Q-2025-0075",
+                            date: fmt(addDays(-6)),
+                            site: "Surabaya 1",
+                            total: 47500000,
+                            status: "EXPIRED",
+                        },
+                        {
+                            id: "Q-2025-0072",
+                            date: fmt(addDays(-7)),
+                            site: "Jakarta Pusat",
+                            total: 22000000,
+                            status: "DRAFT",
+                        },
+                    ],
+                    invoices: [
+                        {
+                            id: "INV-2025-0312",
+                            date: fmt(addDays(-5)),
+                            due: fmt(addDays(25)),
+                            total: 32000000,
+                            status: "UNPAID",
+                        },
+                        {
+                            id: "INV-2025-0309",
+                            date: fmt(addDays(-12)),
+                            due: fmt(addDays(18)),
+                            total: 15000000,
+                            status: "PARTIAL",
+                        },
+                    ],
+                };
+            }
+
+            function render() {
+                const data = seedDemo();
+                // KPIs
+                document.getElementById("statQuotes").textContent = data.kpis.quotes;
+                document.getElementById("statPO").textContent = data.kpis.po;
+                document.getElementById("statProcess").textContent = data.kpis.process;
+                document.getElementById("statShipping").textContent = data.kpis.ship;
+                document.getElementById("statInvoices").textContent = data.kpis.invoices;
+                document.getElementById("statDone").textContent = data.kpis.done;
+
+                // Quotes table
+                const qtbody = document.getElementById("tblQuotes");
+                qtbody.innerHTML = data.quotes
+                    .map(
+                        (q) => `
+        <tr>
+          <td class="fw-medium">${q.id}</td>
+          <td>${q.date}</td>
+          <td>${q.site}</td>
+          <td>${currency(q.total)}</td>
+          <td>${badge(q.status)}</td>
+          <td class="text-end">
+            <a href="quotation.html" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+      `
+                    )
+                    .join("");
+
+                // Invoices table
+                const itbody = document.getElementById("tblInvoices");
+                itbody.innerHTML = data.invoices
+                    .map(
+                        (inv) => `
+        <tr>
+          <td class="fw-medium">${inv.id}</td>
+          <td>${inv.date}</td>
+          <td>${inv.due}</td>
+          <td>${currency(inv.total)}</td>
+          <td>${badge(inv.status)}</td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-secondary" onclick="goto('invoices.html')"><i class="bi bi-receipt"></i></button>
+          </td>
+        </tr>
+      `
+                    )
+                    .join("");
+            }
+
+            function refreshDemo() {
+                render();
+            }
+
+            render();
+        </script>
+    </body>
+</html>

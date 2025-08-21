@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Upload Purchase Order - Under 2 Minutes</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
+    </head>
+    <body class="bg-light">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="bi bi-upload"></i> Upload Purchase Order</h3>
+                <a href="dashboard.html" class="btn btn-secondary btn-sm"><i class="bi bi-arrow-left"></i> Dashboard</a>
+            </div>
+
+            <!-- Form Upload PO -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form id="poForm">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Pilih Quotation</label>
+                                <select id="quotationSelect" class="form-select" required>
+                                    <option value="">-- Pilih Quotation APPROVED --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Upload File PO</label>
+                                <input
+                                    type="file"
+                                    id="poFile"
+                                    class="form-control"
+                                    accept=".pdf,.doc,.docx,.xls,.xlsx"
+                                    required
+                                />
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-cloud-upload"></i> Upload
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabel PO -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daftar Purchase Order</h5>
+                    <table class="table table-bordered mt-3">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Grand total</th>
+                                <th>File</th>
+                                <th>Tanggal Upload</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="poTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const quotations = JSON.parse(localStorage.getItem("u2m_quotations")) || [];
+            const poList = JSON.parse(localStorage.getItem("u2m_pos")) || [];
+
+            // Tampilkan hanya quotation yg APPROVED di select
+            const quotationSelect = document.getElementById("quotationSelect");
+            quotations.forEach((q, idx) => {
+                if (q.status === "APPROVED") {
+                    const opt = document.createElement("option");
+                    opt.value = idx;
+                    opt.textContent = `Q-${idx + 1} | Total: ${formatCurrency(q.grandtotal)}`;
+                    quotationSelect.appendChild(opt);
+                }
+            });
+
+            // Handle submit form
+            document.getElementById("poForm").addEventListener("submit", function (e) {
+                e.preventDefault();
+
+                const qIndex = quotationSelect.value;
+                const fileInput = document.getElementById("poFile");
+
+                if (!qIndex || fileInput.files.length === 0) {
+                    alert("Mohon pilih quotation dan upload file.");
+                    return;
+                }
+
+                const file = fileInput.files[0]; // ✅ FIX
+                const quotation = quotations[qIndex];
+                const poData = {
+                    quotationNumber: `Q-${parseInt(qIndex) + 1}`,
+                    quotationTotal: quotation.grandtotal,
+                    fileName: file.name,
+                    date: new Date().toLocaleString(),
+                    status: "Menunggu Proses",
+                };
+
+                poList.push(poData);
+                localStorage.setItem("u2m_pos", JSON.stringify(poList));
+
+                this.reset();
+                renderPOs();
+            });
+
+            function renderPOs() {
+                const table = document.getElementById("poTable");
+                table.innerHTML = "";
+                console.info(poList);
+                poList.forEach((po, i) => {
+                    table.innerHTML += `
+            <tr>
+                <td>${po.quotationNumber || "-"}</td>
+                <td>${formatCurrency(po.quotationTotal) || "-"}</td>
+                <td><i class="bi bi-file-earmark-text"></i> ${po.fileName || "-"}</td>
+                <td>${po.date}</td>
+                <td><span class="badge bg-info">${po.status}</span></td>
+            </tr>
+        `;
+                });
+            }
+
+            function formatCurrency(value) {
+                return new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    minimumFractionDigits: 0,
+                }).format(value);
+            }
+
+            renderPOs();
+        </script>
+    </body>
+</html>
