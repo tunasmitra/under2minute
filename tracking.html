@@ -35,23 +35,25 @@
                 trackingTable.innerHTML = "";
                 orders.forEach((o, index) => {
                     trackingTable.innerHTML += `
-          <tr>
-            <td>${o.orderNumber}</td>
-            <td>${o.poNumber}</td>
-            <td>${o.quotationNumber}</td>
-            <td>${o.date}</td>
-            <td>${o.deadline}</td>
-            <td><span class="badge bg-${statusColor(o.status)}">${o.status}</span></td>
-            <td>
-              <select class="form-select form-select-sm" onchange="updateStatus(${index}, this.value)">
-                <option value="Dalam Proses" ${o.status === "Dalam Proses" ? "selected" : ""}>Dalam Proses</option>
-                <option value="Produksi" ${o.status === "Produksi" ? "selected" : ""}>Produksi</option>
-                <option value="Dikirim" ${o.status === "Dikirim" ? "selected" : ""}>Dikirim</option>
-                <option value="Selesai" ${o.status === "Selesai" ? "selected" : ""}>Selesai</option>
-              </select>
-            </td>
-          </tr>
-        `;
+                        <tr>
+                            <td>${o.orderNumber}</td>
+                            <td>${o.poNumber}</td>
+                            <td>${o.quotationNumber}</td>
+                            <td>${o.date}</td>
+                            <td>${o.deadline}</td>
+                            <td><span class="badge bg-${statusColor(o.status)}">${o.status}</span></td>
+                            <td>
+                            <select class="form-select form-select-sm" onchange="updateStatus(${index}, this.value)">
+                                <option value="Dalam Proses" ${
+                                    o.status === "Dalam Proses" ? "selected" : ""
+                                }>Dalam Proses</option>
+                                <option value="Produksi" ${o.status === "Produksi" ? "selected" : ""}>Produksi</option>
+                                <option value="Dikirim" ${o.status === "Dikirim" ? "selected" : ""}>Dikirim</option>
+                                <option value="Selesai" ${o.status === "Selesai" ? "selected" : ""}>Selesai</option>
+                            </select>
+                            </td>
+                        </tr>
+                        `;
                 });
             }
 

@@ -29,15 +29,41 @@
             .table thead th {
                 white-space: nowrap;
             }
+            .sidebar {
+                min-height: calc(100vh - 76px);
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            }
+            .nav-link {
+                border-radius: 4px;
+                transition: all 0.2s;
+                margin: 2px 8px;
+            }
+            .nav-link:hover {
+                background: rgba(255, 255, 255, 0.15);
+                transform: translateX(4px);
+            }
+            .nav-link.active {
+                background: rgba(255, 255, 255, 0.25);
+                font-weight: 500;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    min-height: auto;
+                    position: sticky;
+                    top: 76px;
+                    z-index: 1000;
+                }
+                .nav {
+                    flex-direction: row;
+                    overflow-x: auto;
+                }
+                .nav-item {
+                    min-width: 160px;
+                }
+            }
         </style>
     </head>
     <body class="bg-light">
-        <script>
-            // Guard: redirect to login if not authenticated
-            const auth = JSON.parse(localStorage.getItem("u2m_auth") || "null");
-            if (!auth) window.location.href = "login.html";
-        </script>
-
         <!-- Navbar -->
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
             <div class="container-fluid">
@@ -100,6 +126,16 @@
                                         ><i class="bi bi-upload me-2"></i>Upload PO</a
                                     >
                                 </li>
+                                <li>
+                                    <a class="dropdown-item" href="orders.html"
+                                        ><i class="bi bi-clipboard-check me-2"></i>Orders</a
+                                    >
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="receive.html"
+                                        ><i class="bi bi-check-circle me-2"></i>Confirm Delivery</a
+                                    >
+                                </li>
                                 <li><hr class="dropdown-divider" /></li>
                                 <li>
                                     <a class="dropdown-item text-danger" href="#" onclick="logout()"
@@ -113,176 +149,268 @@
             </div>
         </nav>
 
-        <main class="container py-4">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                <div>
-                    <h1 class="h4 mb-0">Dashboard</h1>
-                    <div class="text-secondary" id="welcomeLine">Selamat datang 👋</div>
+        <main class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-md-3 col-lg-2 bg-primary sidebar">
+                    <div class="sidebar-sticky pt-3">
+                        <h5 class="px-3 text-white mb-3">Main Navigation</h5>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="dashboard.html">
+                                    <i class="bi bi-house-door me-2"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="quotation.html">
+                                    <i class="bi bi-file-earmark-text me-2"></i>
+                                    Quotations
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="po.html">
+                                    <i class="bi bi-upload me-2"></i>
+                                    Upload PO
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="orders.html">
+                                    <i class="bi bi-clipboard-check me-2"></i>
+                                    Orders/SPK Internal
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="tracking-customer.html">
+                                    <i class="bi bi-truck me-2"></i>
+                                    Tracking
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="receive.html">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Confirm Delivery
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="invoices.html">
+                                    <i class="bi bi-receipt me-2"></i>
+                                    Invoices
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="btn-group">
-                    <a class="btn btn-sm btn-outline-primary" href="quotation.html"
-                        ><i class="bi bi-plus-circle me-1"></i> Buat Quotation</a
-                    >
-                    <a class="btn btn-sm btn-outline-success" href="po.html"
-                        ><i class="bi bi-upload me-1"></i> Upload PO</a
-                    >
-                    <a class="btn btn-sm btn-outline-warning" href="#" onclick="goto('tracking.html')"
-                        ><i class="bi bi-truck me-1"></i> Tracking</a
-                    >
-                </div>
-            </div>
 
-            <!-- KPI Cards -->
-            <div class="row g-3 mb-4">
-                <div class="col-sm-6 col-lg-4 col-xxl-2">
-                    <a href="quotation.html">
-                        <div class="card stat-card shadow-sm border-0 click-card">
-                            <div class="card-body">
-                                <i class="bi bi-file-earmark-text fs-2 text-primary"></i>
-                                <div>
-                                    <div class="text-secondary small">Quotations Aktif</div>
-                                    <div class="stat-value" id="statQuotes">—</div>
+                <!-- Main content -->
+                <div class="col-md-9 col-lg-10 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h1 class="h4 mb-0">Dashboard</h1>
+                            <div class="text-secondary" id="welcomeLine">Selamat datang 👋</div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6 col-lg-4 col-xxl-2">
+                            <a href="quotation.html">
+                                <div class="card stat-card shadow-sm border-0 click-card">
+                                    <div class="card-body">
+                                        <i class="bi bi-file-earmark-text fs-2 text-primary"></i>
+                                        <div>
+                                            <div class="text-secondary small">Quotations</div>
+                                            <div class="stat-value" id="statQuotes">—</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 col-xxl-2">
+                            <div class="card stat-card shadow-sm border-0">
+                                <div class="card-body">
+                                    <i class="bi bi-clipboard-check fs-2 text-success"></i>
+                                    <div>
+                                        <div class="text-secondary small">PO</div>
+                                        <div class="stat-value" id="statPO">—</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </a>
-                </div>
-                <div class="col-sm-6 col-lg-4 col-xxl-2">
-                    <div class="card stat-card shadow-sm border-0">
-                        <div class="card-body">
-                            <i class="bi bi-clipboard-check fs-2 text-success"></i>
-                            <div>
-                                <div class="text-secondary small">PO Menunggu</div>
-                                <div class="stat-value" id="statPO">—</div>
+                        <div class="col-sm-6 col-lg-4 col-xxl-2">
+                            <div class="card stat-card shadow-sm border-0">
+                                <div class="card-body">
+                                    <i class="bi bi-gear-wide-connected fs-2 text-info"></i>
+                                    <div>
+                                        <div class="text-secondary small">Diproses</div>
+                                        <div class="stat-value" id="statProcess">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 col-xxl-2">
+                            <div class="card stat-card shadow-sm border-0" onclick="goto('tracking.html')">
+                                <div class="card-body">
+                                    <i class="bi bi-truck fs-2 text-warning"></i>
+                                    <div>
+                                        <div class="text-secondary small">Dalam Pengiriman</div>
+                                        <div class="stat-value" id="statShipping">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 col-xxl-2">
+                            <div class="card stat-card shadow-sm border-0" onclick="goto('invoices.html')">
+                                <div class="card-body">
+                                    <i class="bi bi-receipt fs-2 text-danger"></i>
+                                    <div>
+                                        <div class="text-secondary small">Tagihan</div>
+                                        <div class="stat-value" id="statInvoices">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 col-xxl-2">
+                            <div class="card stat-card shadow-sm border-0">
+                                <div class="card-body">
+                                    <i class="bi bi-check2-circle fs-2 text-secondary"></i>
+                                    <div>
+                                        <div class="text-secondary small">Selesai</div>
+                                        <div class="stat-value" id="statDone">—</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-sm-6 col-lg-4 col-xxl-2">
-                    <div class="card stat-card shadow-sm border-0">
-                        <div class="card-body">
-                            <i class="bi bi-gear-wide-connected fs-2 text-info"></i>
-                            <div>
-                                <div class="text-secondary small">Diproses</div>
-                                <div class="stat-value" id="statProcess">—</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-lg-4 col-xxl-2">
-                    <div class="card stat-card shadow-sm border-0" onclick="goto('tracking.html')">
-                        <div class="card-body">
-                            <i class="bi bi-truck fs-2 text-warning"></i>
-                            <div>
-                                <div class="text-secondary small">Dalam Pengiriman</div>
-                                <div class="stat-value" id="statShipping">—</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-lg-4 col-xxl-2">
-                    <div class="card stat-card shadow-sm border-0" onclick="goto('invoices.html')">
-                        <div class="card-body">
-                            <i class="bi bi-receipt fs-2 text-danger"></i>
-                            <div>
-                                <div class="text-secondary small">Tagihan</div>
-                                <div class="stat-value" id="statInvoices">—</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-lg-4 col-xxl-2">
-                    <div class="card stat-card shadow-sm border-0">
-                        <div class="card-body">
-                            <i class="bi bi-check2-circle fs-2 text-secondary"></i>
-                            <div>
-                                <div class="text-secondary small">Selesai</div>
-                                <div class="stat-value" id="statDone">—</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row g-4">
-                <!-- Recent Quotations -->
-                <div class="col-12 col-xl-6">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h2 class="h6 mb-0">
-                                    <i class="bi bi-file-earmark-text me-2 text-primary"></i>Quotation Terbaru
-                                </h2>
-                                <a class="text-decoration-none" href="quotation.html">Lihat semua</a>
+                    <div class="row g-4">
+                        <!-- Recent Quotations -->
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h2 class="h6 mb-0">
+                                            <i class="bi bi-file-earmark-text me-2 text-primary"></i>Quotation Terbaru
+                                        </h2>
+                                        <a class="text-decoration-none" href="quotation.html">Lihat semua</a>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Tanggal</th>
+                                                    <th>Customer Site</th>
+                                                    <th>Total</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tblQuotes"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Tanggal</th>
-                                            <th>Customer Site</th>
-                                            <th>Total</th>
-                                            <th>Status</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblQuotes"></tbody>
-                                </table>
+                        <hr />
+                        <!-- Invoices -->
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h2 class="h6 mb-0">
+                                            <i class="bi bi-receipt me-2 text-danger"></i>Tagihan (Due Soon)
+                                        </h2>
+                                        <a class="text-decoration-none" href="invoices.html">Lihat semua</a>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Tanggal</th>
+                                                    <th>Jatuh Tempo</th>
+                                                    <th>Total</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tblInvoices"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h2 class="h6 mb-0">
+                                            <i class="bi bi-stack-overflow me-2 text-danger"></i>Simulasi Internal Tunas
+                                            Mitra
+                                        </h2>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>No Order</th>
+                                                    <th>No PO</th>
+                                                    <th>Quotation</th>
+                                                    <th>Tanggal Order</th>
+                                                    <th>Deadline</th>
+                                                    <th>Status</th>
+                                                    <th>Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="trackingTable"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Invoices -->
-                <div class="col-12 col-xl-6">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h2 class="h6 mb-0">
-                                    <i class="bi bi-receipt me-2 text-danger"></i>Tagihan (Due Soon)
-                                </h2>
-                                <a class="text-decoration-none" href="#" onclick="goto('invoices.html')">Lihat semua</a>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Tanggal</th>
-                                            <th>Jatuh Tempo</th>
-                                            <th>Total</th>
-                                            <th>Status</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tblInvoices"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline sample could be added later -->
             </div>
         </main>
-
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
         <script>
+            // Guard: redirect to login if not authenticated
+            const auth = JSON.parse(localStorage.getItem("u2m_auth") || "null");
+            if (!auth) window.location.href = "login.html";
+            // Add active class to current page in sidebar
+            document.querySelectorAll(".nav-link").forEach((link) => {
+                if (link.href === window.location.href) {
+                    link.classList.add("active");
+                }
+            });
+
             // Populate user info
             document.getElementById("userName").textContent = auth?.name || "Customer";
             document.getElementById("userEmail").textContent = auth?.email || "";
             document.getElementById("welcomeLine").textContent = `Selamat datang, ${auth?.name || "Customer"} 👋`;
+            let quotations = JSON.parse(localStorage.getItem("u2m_quotations") || "[]");
 
             function logout() {
                 localStorage.removeItem("u2m_auth");
                 window.location.href = "login.html";
             }
-
+            function formatCurrency(n) {
+                return new Intl.NumberFormat("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                    maximumFractionDigits: 0,
+                }).format(n || 0);
+            }
             function goto(page) {
                 // Demo: prevent 404 for pages belum dibuat
                 if (
@@ -313,75 +441,54 @@
                     ACCEPTED: "success",
                     EXPIRED: "secondary",
                     DRAFT: "warning",
+                    DRAFT: "secondary",
+                    SENT: "primary",
+                    APPROVED: "success",
+                    REJECTED: "danger",
                     UNPAID: "danger",
                     PARTIAL: "warning",
                     PAID: "success",
+                    "Dalam Proses": "primary",
+                    Produksi: "warning",
+                    Dikirim: "info",
+                    Selesai: "success",
                 };
                 const color = map[status] || "secondary";
                 return `<span class="badge text-bg-${color}">${status}</span>`;
             }
 
-            function seedDemo() {
-                const today = new Date();
-                const addDays = (d) => {
-                    const x = new Date(today);
-                    x.setDate(x.getDate() + d);
-                    return x;
-                };
-                const fmt = (d) => d.toISOString().slice(0, 10);
-                return {
-                    kpis: { quotes: 4, po: 2, process: 3, ship: 1, invoices: 2, done: 8 },
-                    quotes: [
-                        {
-                            id: "Q-2025-0081",
-                            date: fmt(addDays(-2)),
-                            site: "Jakarta Barat",
-                            total: 125000000,
-                            status: "SENT",
-                        },
-                        {
-                            id: "Q-2025-0079",
-                            date: fmt(addDays(-4)),
-                            site: "Bandung Timur",
-                            total: 89000000,
-                            status: "ACCEPTED",
-                        },
-                        {
-                            id: "Q-2025-0075",
-                            date: fmt(addDays(-6)),
-                            site: "Surabaya 1",
-                            total: 47500000,
-                            status: "EXPIRED",
-                        },
-                        {
-                            id: "Q-2025-0072",
-                            date: fmt(addDays(-7)),
-                            site: "Jakarta Pusat",
-                            total: 22000000,
-                            status: "DRAFT",
-                        },
-                    ],
-                    invoices: [
-                        {
-                            id: "INV-2025-0312",
-                            date: fmt(addDays(-5)),
-                            due: fmt(addDays(25)),
-                            total: 32000000,
-                            status: "UNPAID",
-                        },
-                        {
-                            id: "INV-2025-0309",
-                            date: fmt(addDays(-12)),
-                            due: fmt(addDays(18)),
-                            total: 15000000,
-                            status: "PARTIAL",
-                        },
-                    ],
-                };
-            }
-
             function render() {
-                const data = seedDemo();
+                // Get real data from localStorage
+                const quotations = JSON.parse(localStorage.getItem("u2m_quotations") || "[]");
+                const pos = JSON.parse(localStorage.getItem("u2m_pos") || "[]");
+                const invoices = JSON.parse(localStorage.getItem("u2m_invoices") || "[]");
+                const orders = JSON.parse(localStorage.getItem("u2m_orders") || "[]");
+
+                // Calculate KPIs
+                const data = {
+                    kpis: {
+                        quotes: quotations.length,
+                        po: pos.filter((p) => p.status === "Menunggu Proses").length,
+                        process: orders.filter((o) => o.status === "Dalam Proses").length,
+                        ship: orders.filter((o) => o.status === "Dikirim").length,
+                        invoices: invoices.filter((i) => i.status === "Belum Dibayar").length,
+                        done: orders.filter((o) => o.status === "Selesai").length,
+                    },
+                    quotes: quotations.slice(0, 4).map((q) => ({
+                        id: q.id,
+                        date: q.date,
+                        site: q.customer?.site || "N/A",
+                        total: q.grandtotal,
+                        status: q.status,
+                    })),
+                    invoices: invoices.slice(0, 2).map((i) => ({
+                        id: i.invoiceNumber,
+                        date: i.date,
+                        due: i.dueDate || i.date,
+                        total: i.amount,
+                        status: i.status === "Lunas" ? "PAID" : "UNPAID",
+                    })),
+                };
                 // KPIs
                 document.getElementById("statQuotes").textContent = data.kpis.quotes;
                 document.getElementById("statPO").textContent = data.kpis.po;
@@ -394,18 +501,19 @@
                 const qtbody = document.getElementById("tblQuotes");
                 qtbody.innerHTML = data.quotes
                     .map(
-                        (q) => `
-        <tr>
-          <td class="fw-medium">${q.id}</td>
-          <td>${q.date}</td>
-          <td>${q.site}</td>
-          <td>${currency(q.total)}</td>
-          <td>${badge(q.status)}</td>
-          <td class="text-end">
-            <a href="quotation.html" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
-          </td>
-        </tr>
-      `
+                        (q, index) => `
+                            <tr>
+                            <td class="fw-medium">${q.id}</td>
+                            <td>${q.date}</td>
+                            <td>${q.site}</td>
+                            <td>${currency(q.total)}</td>
+                            <td>${badge(q.status)}</td>
+                            <td class="text-end">
+                                <a href="quotation.html" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                                <button class="btn btn-sm btn-primary" title="Print PDF" onclick="printQuotation(${index})"><i class="bi bi-printer"></i></button>
+                            </td>
+                            </tr>
+                        `
                     )
                     .join("");
 
@@ -414,17 +522,17 @@
                 itbody.innerHTML = data.invoices
                     .map(
                         (inv) => `
-        <tr>
-          <td class="fw-medium">${inv.id}</td>
-          <td>${inv.date}</td>
-          <td>${inv.due}</td>
-          <td>${currency(inv.total)}</td>
-          <td>${badge(inv.status)}</td>
-          <td class="text-end">
-            <button class="btn btn-sm btn-outline-secondary" onclick="goto('invoices.html')"><i class="bi bi-receipt"></i></button>
-          </td>
-        </tr>
-      `
+                            <tr>
+                            <td class="fw-medium">${inv.id}</td>
+                            <td>${inv.date}</td>
+                            <td>${inv.due}</td>
+                            <td>${currency(inv.total)}</td>
+                            <td>${badge(inv.status)}</td>
+                            <td class="text-end">
+                                <a href="invoices.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-receipt"></i></a>
+                            </td>
+                            </tr>
+                        `
                     )
                     .join("");
             }
@@ -434,6 +542,105 @@
             }
 
             render();
+            // ===== Print to PDF (jsPDF + autoTable) =====
+            function printQuotation(index) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const q = quotations[index];
+
+                // Header
+                doc.setFontSize(16);
+                doc.text("QUOTATION", 105, 14, { align: "center" });
+                doc.setFontSize(11);
+                doc.text("Under 2 Minutes — Customer Portal", 105, 20, { align: "center" });
+
+                // Meta
+                doc.setFontSize(10);
+                doc.text(`No: ${q.id}`, 14, 32);
+                doc.text(`Tanggal: ${q.date}`, 14, 38);
+                doc.text(`Customer: ${q.customer?.name || ""}`, 120, 32);
+                doc.text(`Email: ${q.customer?.email || ""}`, 120, 38);
+
+                // Table
+                const body = q.items.map((it, i) => [
+                    i + 1,
+                    it.product,
+                    it.qty,
+                    formatCurrency(it.price),
+                    formatCurrency(it.total),
+                ]);
+                doc.autoTable({
+                    startY: 46,
+                    head: [["No", "Nama Barang", "Qty", "Harga", "Subtotal"]],
+                    body,
+                });
+
+                // Totals
+                const y = doc.lastAutoTable.finalY + 8;
+                doc.text(`Subtotal: ${formatCurrency(q.subtotal)}`, 130, y);
+                doc.text(`PPN (11%): ${formatCurrency(q.ppn)}`, 130, y + 6);
+                doc.setFontSize(12);
+                doc.text(`Grand Total: ${formatCurrency(q.grandtotal)}`, 130, y + 12);
+
+                // Footer note
+                doc.setFontSize(9);
+                doc.text("Masa berlaku penawaran 14 hari kalender sejak tanggal terbit.", 14, y + 20);
+
+                doc.save(`${q.id}.pdf`);
+            }
+        </script>
+        <script>
+            const orders = JSON.parse(localStorage.getItem("u2m_orders")) || [];
+            const trackingTable = document.getElementById("trackingTable");
+
+            function renderTracking() {
+                trackingTable.innerHTML = "";
+                orders.forEach((o, index) => {
+                    trackingTable.innerHTML += `
+                        <tr>
+                            <td>${o.orderNumber}</td>
+                            <td>${o.poNumber}</td>
+                            <td>${o.quotationNumber}</td>
+                            <td>${o.date}</td>
+                            <td>${o.deadline}</td>
+                            <td><span class="badge bg-${statusColor(o.status)}">${o.status}</span></td>
+                            <td>
+                            <select class="form-select form-select-sm" onchange="updateStatus(${index}, this.value)">
+                                <option value="Dalam Proses" ${
+                                    o.status === "Dalam Proses" ? "selected" : ""
+                                }>Dalam Proses</option>
+                                <option value="Produksi" ${o.status === "Produksi" ? "selected" : ""}>Produksi</option>
+                                <option value="Dikirim" ${o.status === "Dikirim" ? "selected" : ""}>Dikirim</option>
+                                <option value="Selesai" ${o.status === "Selesai" ? "selected" : ""}>Selesai</option>
+                            </select>
+                            </td>
+                        </tr>
+                        `;
+                });
+            }
+
+            function updateStatus(index, newStatus) {
+                orders[index].status = newStatus;
+                localStorage.setItem("u2m_orders", JSON.stringify(orders));
+                renderTracking();
+            }
+
+            function statusColor(status) {
+                switch (status) {
+                    case "Dalam Proses":
+                        return "primary";
+                    case "Produksi":
+                        return "warning";
+                    case "Dikirim":
+                        return "info";
+                    case "Selesai":
+                        return "success";
+                    default:
+                        return "secondary";
+                }
+            }
+
+            renderTracking();
         </script>
     </body>
 </html>

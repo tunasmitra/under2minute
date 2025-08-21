@@ -6,19 +6,131 @@
         <title>Konfirmasi Penerimaan Barang</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+        <style>
+            .sidebar {
+                min-height: calc(100vh - 76px);
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            }
+            .nav-link {
+                border-radius: 4px;
+                transition: all 0.2s;
+                margin: 2px 8px;
+            }
+            .nav-link:hover {
+                background: rgba(255, 255, 255, 0.15);
+                transform: translateX(4px);
+            }
+            .nav-link.active {
+                background: rgba(255, 255, 255, 0.25);
+                font-weight: 500;
+            }
+            @media (max-width: 768px) {
+                .sidebar {
+                    min-height: auto;
+                    position: sticky;
+                    top: 76px;
+                    z-index: 1000;
+                }
+                .nav {
+                    flex-direction: row;
+                    overflow-x: auto;
+                }
+                .nav-item {
+                    min-width: 160px;
+                }
+            }
+        </style>
     </head>
-    <body class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3>Konfirmasi Penerimaan Barang</h3>
-            <a href="dashboard.html" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Kembali ke Dashboard
-            </a>
-        </div>
+    <body class="bg-light">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    <span>Under 2 Minutes</span>
+                </a>
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </nav>
 
-        <div id="receiveList"></div>
+        <main class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-md-3 col-lg-2 bg-primary sidebar">
+                    <div class="sidebar-sticky pt-3">
+                        <h5 class="px-3 text-white mb-3">Main Navigation</h5>
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="dashboard.html">
+                                    <i class="bi bi-house-door me-2"></i>
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="quotation.html">
+                                    <i class="bi bi-file-earmark-text me-2"></i>
+                                    Quotations
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="po.html">
+                                    <i class="bi bi-upload me-2"></i>
+                                    Upload PO
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="orders.html">
+                                    <i class="bi bi-clipboard-check me-2"></i>
+                                    Orders/SPK Internal
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="tracking-customer.html">
+                                    <i class="bi bi-truck me-2"></i>
+                                    Tracking
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="receive.html">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Confirm Delivery
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="invoices.html">
+                                    <i class="bi bi-receipt me-2"></i>
+                                    Invoices
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
 
+                <!-- Main content -->
+                <div class="col-md-9 col-lg-10 p-4">
+                    <h3>Konfirmasi Penerimaan Barang</h3>
+                    <div id="receiveList"></div>
+                </div>
+            </div>
+        </main>
         <script>
+            // Add active class to current page in sidebar
+            document.querySelectorAll(".nav-link").forEach((link) => {
+                if (link.href === window.location.href) {
+                    link.classList.add("active");
+                }
+            });
+
+            function logout() {
+                localStorage.removeItem("u2m_auth");
+                window.location.href = "login.html";
+            }
+
             const orders = JSON.parse(localStorage.getItem("u2m_orders")) || [];
+            console.info(orders);
             const list = document.getElementById("receiveList");
 
             function renderReceive() {
@@ -34,19 +146,19 @@
 
                 filtered.forEach((o, idx) => {
                     list.innerHTML += `
-          <div class="card mb-3 shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title">Order: ${o.orderNumber}</h5>
-              <p class="mb-1"><strong>No PO:</strong> ${o.poNumber}</p>
-              <p class="mb-1"><strong>Quotation:</strong> ${o.quotationNumber}</p>
-              <p class="mb-1"><strong>Tanggal Order:</strong> ${o.date}</p>
-              <p class="mb-3"><strong>Status:</strong> <span class="badge bg-info">${o.status}</span></p>
-              <button class="btn btn-success" onclick="confirmReceive(${idx})">
-                <i class="bi bi-check-circle"></i> Konfirmasi Terima
-              </button>
-            </div>
-          </div>
-        `;
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                            <h5 class="card-title">Order: ${o.orderNumber}</h5>
+                            <p class="mb-1"><strong>No PO:</strong> ${o.poNumber}</p>
+                            <p class="mb-1"><strong>Quotation:</strong> ${o.quotationNumber}</p>
+                            <p class="mb-1"><strong>Tanggal Order:</strong> ${o.date}</p>
+                            <p class="mb-3"><strong>Status:</strong> <span class="badge bg-info">${o.status}</span></p>
+                            <button class="btn btn-success" onclick="confirmReceive(${idx})">
+                                <i class="bi bi-check-circle"></i> Konfirmasi Terima
+                            </button>
+                            </div>
+                        </div>
+                        `;
                 });
             }
 
