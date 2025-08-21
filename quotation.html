@@ -303,7 +303,7 @@
         <script>
             // Route guard: must be logged in
             const auth = JSON.parse(localStorage.getItem("u2m_auth") || "null");
-            if (!auth) window.location.href = "login.html";
+            if (!auth) window.location.href = "index.html";
             // ===== Utils =====
             function formatCurrency(n) {
                 return new Intl.NumberFormat("id-ID", {
@@ -526,7 +526,7 @@
 
             function logout() {
                 localStorage.removeItem("u2m_auth");
-                window.location.href = "login.html";
+                window.location.href = "index.html";
             }
 
             // Init
